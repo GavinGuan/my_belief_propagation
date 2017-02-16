@@ -1,0 +1,145 @@
+A simple implementation of Belief Propagation.
+Using adjacency list to store the graph (for undirected graph). Here, we combine two adjacency list (adjacency list and inverse adjacency list) into one, called orthogonal list. It's convenient to get the in degree and out degree of every vertex.
+
+File List:
+-----
+README			//README file for the code
+botnetbp3.7.2_extend.c	//Belief Propogation algorithm (BP) in C
+
+example-graph/		//There are two examples here. 
+
+How to Compile:
+-----
+gcc -o botnetbp3.7.2_extend botnetbp3.7.2_extend.c -mcmodel=medium
+
+
+How to Run
+-----
+1) Run BP on a graph:
+a) create graph edge file and ground truth file.
+For example: (A graph with 4 edges, and node 1 is Good, node 4 is Bad.)
+<input>:
+0 1
+0 2
+0 3
+2 4
+
+<gt>:
+1 G
+4 B
+
+
+b) generate the input files for BP C program.
+./toob_ls_generate_graph_inputfile_ip-domain.py_optimaized <input> <gt>
+Input:
+Files <input> and <gt> are got from the previous step.
+
+Output:
+bp_graph_node_index.txt		//Node index in graph;
+bp_graph_initial_belief.txt	//Initial belief value for all the nodes;
+bp_graph_edges.txt		//Edges in graph
+
+
+c) run BP
+./botnetbp3.7.2_extend <graph_initial_states_file> <graph_edges_file> <bp_edge_potential_file> <number_of_nodes> <number_of_states> [<max_iteration>]
+Input:
+<graph_initial_states_file> 	//file bp_graph_initial_belief.txt generated in previous step
+<graph_edges_file> 		//file bp_graph_edges.txt generated in previous step
+<bp_edge_potential_file> 	//A provided file bp_edge_potential_2states_0.3_0.7.txt from HP paper
+<number_of_nodes> 		//the number of nodes in graph
+<number_of_states>		//the states of each node. Here is 2 because of two states malicous and benign
+<max_iteration>			//The default value for this prameter is 15. If you want more iterations, give a number here, such as 100.
+Output:
+graph_bp_result.txt		//A file with scores for all the nodes
+
+
+d) transfer the BP result, make the nodes use their original lables.
+./tools_restore_label.py <bp_result_f> <node_index_f> <output_f>
+Input:
+<bp_result_f> 			//file graph_bp_result.txt generated in previous step
+<node_index_f>			//file bp_graph_node_index.txt generated in previous step
+
+Output:
+<output_f>			//A file with scores for all the nodes but using the original labels.
+
+
+
+***************
+* Change set:
+***************
+3.7.2_extend
+ Optimize the time of writting the final belief value into a file.
+ Add timers to count the time used. Don't write tht degree into a file.
+ The converge threshold is 1*10^10 defaultly.
+
+
+3.7.2
+ Improved method for avoiding the message underflow. Time all of the message a big number.
+ There are three executable files for this version.
+ botnetbp3.7.2_ct1_10-10	//the converge threshold is 1*10^10
+ botnetbp3.7.2_ct1_10-5         //the converge threshold is 1*10^5
+ botnetbp3.7.2_ct5_10-3         //the converge threshold is 5*10^3
+
+3.7.1
+ During the message computation, when the message is less than a small value, just assign it the previous value. It's a way to avoid underflow.
+
+3.7
+ Fixed a huge BUG!! Now, BP should works well!
+
+3.6.3
+ TODO: debug the pruning
+
+3.6.2
+ Add an Optimazation (from the paper) (but it does not work!!! BP takes long time to finish the iterations.)
+
+3.6.1_1
+ Calculate the belief value after each iteration. And use the new belief vaule in next interation.(Just a try. Maybe not correct.)
+
+3.6.1(*)
+ Optimization (Based on v3.6): when the message doesn't change significantly between iterations, BP stops.
+
+3.6(*)
+ Using adjacency list to store the graph (for undirected graph). Here, we combine two adjacency lists (adjacency list and
+ inverse adjacency list) into one, called orthogonal list. It's convenient to get the in degree and 
+ out degree of every vertex
+
+ Average time of each iteration is about 130s, (for graph with nodes 23938 and edges 736k)
+
+3.5
+ Using adjacency list to store the graph. Save much memory.
+
+
+3.4(*)
+Allocate memory to the graph matrix and other data structure dynamically.
+All memeory = 28n + 28n*n + 32n*n*<number of state>
+//Pruning the Graph. Remove the connected components with all nodes unknown.(not work for big graph)
+
+3.3.2(*)
+Keep allocate memory stacticly.
+Change the data structure, only message related varibles use the "long double".
+//Pruning the Graph. Remove the connected components with all nodes unknown. (not work for big graph)
+
+
+3.3.1, 3.2.1
+Based on 3.3 and 3.2, change type of the matrix from "long double" to "float", and it makes the program to use less memory, to supports more nodes and run faster.
+
+3.3
+Add pruning process before doing BP algorithm.
+
+3.2
+Remove some debug output.
+
+3.1
+Print the belief result on the screen and save it into a file.
+Add a test data to show how BP algorithm works on a graph with disconnected components.
+./botnetbp3.1 graph_data_8nodes_disconnected_component_initial_belief.txt graph_data_8nodes_disconnected_component_edges.txt bp_edge_potential_2states.txt
+
+
+3.0
+A simple implementation of belief propagation.
+It supports a graph with up to 1024 nodes and each nodes with up to 20 states.
+
+#
+#@author: gbtux (gbtju85@gmail.com)
+#
+
